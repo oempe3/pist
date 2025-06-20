@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Entrada</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" href="favicon.png" type="image/png" />
+
+<script>
+  const senhaCorreta = "pernambuco3";
+
+  function verificarAutenticacao() {
+    if (localStorage.getItem("autenticado") !== "sim") {
+      window.location.href = "index.html";
+    }
+  }
+
+  function realizarLogin() {
+    const senha = document.getElementById("senha").value;
+    if (senha === senhaCorreta) {
+      localStorage.setItem("autenticado", "sim");
+      window.location.href = "status.html";
+    } else {
+      alert("Senha incorreta.");
+    }
+  }
+
+  function logout() {
+    localStorage.removeItem("autenticado");
+    window.location.href = "index.html";
+  }
+</script>
+
+<script>
+  const senhaCompleta = "p3rnambuco3";
+  const senhaSomenteStatus = "statusonly";
+
+  function verificarAutenticacao(pagina) {
+    const acesso = localStorage.getItem("acesso");
+    if (pagina === "status") {
+      if (acesso !== "total" && acesso !== "status") {
+        window.location.href = "index.html";
+      }
+    } else {
+      if (acesso !== "total") {
+        window.location.href = "index.html";
+      }
+    }
+  }
+
+  function realizarLogin() {
+    const senha = document.getElementById("senha").value;
+    if (senha === senhaCompleta) {
+      localStorage.setItem("acesso", "total");
+      registrarLogin("Acesso total concedido");
+      window.location.href = "status.html";
+    } else if (senha === senhaSomenteStatus) {
+      localStorage.setItem("acesso", "status");
+      registrarLogin("Acesso limitado à página status");
+      window.location.href = "status.html";
+    } else {
+      alert("Senha incorreta.");
+    }
+  }
+
+  function logout() {
+    localStorage.removeItem("acesso");
+    window.location.href = "index.html";
+  }
+
+  function registrarLogin(tipo) {
+    let historico = JSON.parse(localStorage.getItem("historicoLogin") || "[]");
+    historico.push({ data: new Date().toLocaleString('pt-BR'), tipo });
+    localStorage.setItem("historicoLogin", JSON.stringify(historico));
+  }
+</script>
+</head>
+<body onload='verificarAutenticacao()'>
+  <header>
+    <div><strong>UTE Pernambuco III</strong></div>
+    <div id="datetime"></div>
+  <button onclick="logout()" style="background:#e63946;float:right;margin-left:auto;">Sair</button></header>
+
+  <div class="container">
+    <!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Entrada de Dados - Pernambuco III</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="favicon.png">
+</head>
+<body onload='verificarAutenticacao("entrada")'>
+  <header class="main-header">
+    <div class="header-content">
+      <div class="header-left">
+        <img src="logomarca.png" alt="Logo Pernambuco III" class="header-logo">
+        <div>
+          <div class="header-title">Quadro de Disponibilidade</div>
+          <div class="header-subtitle">Sistema de Monitoramento de Equipamentos</div>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="header-time" id="relogio"></div>
+        <nav class="header-nav">
+          <a href="status.html" class="nav-button">Ver Status</a>
+          <a href="csv_update.html" class="nav-button">Atualizar CSV</a>
+          <a href="index.html" class="nav-button danger">Sair</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <div class="main-container">
+    <div class="page-title">Atualização de Status dos Equipamentos</div>
+    <div class="page-description">Atualize o status dos equipamentos em tempo real com sincronização automática</div>
+    
+    <div class="form-grid">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Formulário de Atualização</div>
+          <div class="card-description">Selecione um equipamento e edite suas informações</div>
+        </div>
+        <div class="card-content">
+          <form id="form-status">
+            <div class="form-group">
+              <label class="form-label" for="dispositivo">Selecione o Equipamento</label>
+              <select id="dispositivo" class="form-select" onchange="carregarDadosEquipamento()" required>
+                <option value="">-- Selecione um equipamento --</option>
+              </select>
+            </div>
+
+            <div id="dados-equipamento" style="display:none;">
+              <div class="form-group">
+                <label class="form-label" for="status">Status</label>
+                <select id="status" class="form-select" onchange="atualizarCampos()" required>
+                  <option value="">-- Selecione o status --</option>
+                  <option value="OPE">Em Operação</option>
+                  <option value="ST-BY">Em Stand-by</option>
+                  <option value="MANU">Em Manutenção</option>
+                </select>
+              </div>
+
+              <div id="standby-opcoes" class="form-group" style="display:none;">
+                <label class="form-label" for="motivo">Motivo do Stand-by</label>
+                <select id="motivo-standby" class="form-select">
+                  <option value="">-- Selecione o motivo --</option>
+                  <option value="Conveniencia operacional">Conveniência operacional</option>
+                  <option value="Conveniencia do sistema">Conveniência do sistema</option>
+                </select>
+              </div>
+
+              <div id="manutencao-campos" style="display:none;">
+                <div class="form-group">
+                  <label class="form-label" for="motivo-manutencao">Motivo da Manutenção</label>
+                  <input type="text" id="motivo-manutencao" class="form-input" placeholder="Digite o motivo da manutenção">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="pts">Nº da PTS</label>
+                <input type="text" id="pts" class="form-input" placeholder="Digite o número da PTS">
+              </div>
+              
+              <div class="form-group">
+                <label class="form-label" for="os">Nº da OS</label>
+                <input type="text" id="os" class="form-input" placeholder="Digite o número da OS">
+              </div>
+              
+              <div class="form-group">
+                <label class="form-label" for="retorno">Previsão de retorno</label>
+                <input type="datetime-local" id="retorno" class="form-input">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="cadeado">Nº do Cadeado</label>
+                <input type="text" id="cadeado" class="form-input" placeholder="Digite o número do cadeado">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="observacoes">Observações (Máx. 100 caracteres)</label>
+                <textarea id="observacoes" class="form-textarea" maxlength="100" rows="3" placeholder="Adicione observações sobre o status..."></textarea>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="modificado_por">Modificado por</label>
+                <input type="text" id="modificado_por" class="form-input" placeholder="Nome do responsável pela modificação" value="admin">
+              </div>
+            </div>
+
+            <button type="submit" class="form-button full-width">
+              <span id="button-text">Atualizar Equipamento</span>
+              <div id="button-loader" class="loading-spinner" style="display: none;"></div>
+            </button>
+            
+            <div id="mensagem" style="display:none;"></div>
+          </form>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Registro de Modificações</div>
+          <div class="card-description">Histórico das últimas atualizações realizadas</div>
+        </div>
+        <div class="card-content">
+          <div id="registro-lista">
+            <p class="text-center text-sm" style="color: var(--gray-500);">Nenhuma modificação registrada ainda.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Endpoint do Google Apps Script
+    const endpoint = "https://script.google.com/macros/s/AKfycbwSwlJATYl9L0GHOwNrGzRnhRsrNbaZedUd0lLGujwiF4noP8xHP8dUH9SrfVh7fAi0Sw/exec";
+    
+    let equipamentosData = []; // Variável para armazenar os dados dos equipamentos
+    let equipamentoSelecionado = null; // Equipamento atualmente selecionado
+
+    // Inicialização
+    document.addEventListener("DOMContentLoaded", function() {
+      carregarEquipamentosDoSheet(); // Carrega equipamentos do Google Sheet
+      carregarRegistros();
+      atualizarRelogio();
+      setInterval(atualizarRelogio, 1000);
+      setInterval(carregarRegistros, 30000); // Atualiza a cada 30 segundos
+    });
+
+    // Carregar equipamentos do Google Sheet e preencher o dropdown
+    async function carregarEquipamentosDoSheet() {
+      const select = document.getElementById("dispositivo");
+      select.innerHTML = "<option value=\"\">-- Selecione um equipamento --</option>"; // Limpa e adiciona opção padrão
+
+      try {
+        const response = await fetch(endpoint);
+        const data = await response.json();
+        equipamentosData = data; // Armazena os dados completos
+
+        // Preencher o dropdown com as TAGs dos equipamentos
+        equipamentosData.forEach(equip => {
+          const option = document.createElement("option");
+          option.value = equip.TAG;
+          option.textContent = equip.TAG; // Exibe apenas a TAG
+          select.appendChild(option);
+        });
+      } catch (error) {
+        console.error("Erro ao carregar equipamentos do Google Sheet:", error);
+        mostrarMensagem("Erro ao carregar a lista de equipamentos. Verifique sua conexão ou a configuração do Google Sheet.", "error");
+      }
+    }
+
+    // Carregar dados do equipamento selecionado
+    function carregarDadosEquipamento() {
+      const select = document.getElementById("dispositivo");
+      const dadosContainer = document.getElementById("dados-equipamento");
+      
+      if (select.value) {
+        equipamentoSelecionado = equipamentosData.find(e => e.TAG === select.value);
+        if (equipamentoSelecionado) {
+          // Preencher todos os campos do formulário com os dados existentes
+          document.getElementById("status").value = equipamentoSelecionado.STATUS || "";
+          document.getElementById("pts").value = equipamentoSelecionado.PTS || "";
+          document.getElementById("os").value = equipamentoSelecionado.OS || "";
+          document.getElementById("retorno").value = equipamentoSelecionado.RETORNO ? new Date(equipamentoSelecionado.RETORNO).toISOString().slice(0,16) : "";
+          document.getElementById("cadeado").value = equipamentoSelecionado.CADEADO || "";
+          document.getElementById("observacoes").value = equipamentoSelecionado.OBSERVACOES || "";
+          document.getElementById("modificado_por").value = equipamentoSelecionado.MODIFICADO_POR || "admin";
+          
+          // Preencher motivo baseado no status atual
+          if (equipamentoSelecionado.STATUS === "ST-BY") {
+            document.getElementById("motivo-standby").value = equipamentoSelecionado.MOTIVO || "";
+          } else if (equipamentoSelecionado.STATUS === "MANU") {
+            document.getElementById("motivo-manutencao").value = equipamentoSelecionado.MOTIVO || "";
+          }
+          
+          atualizarCampos(); // Atualiza a visibilidade dos campos condicionais
+          dadosContainer.style.display = "block";
+        }
+      } else {
+        dadosContainer.style.display = "none";
+        equipamentoSelecionado = null;
+      }
+    }
+
+    // Atualizar campos baseado no status selecionado
+    function atualizarCampos() {
+      const status = document.getElementById("status").value;
+      const standbyOpcoes = document.getElementById("standby-opcoes");
+      const manutencaoCampos = document.getElementById("manutencao-campos");
+      
+      // Esconder todos os campos condicionais
+      standbyOpcoes.style.display = "none";
+      manutencaoCampos.style.display = "none";
+      
+      // Mostrar campos baseado no status
+      if (status === "ST-BY") {
+        standbyOpcoes.style.display = "block";
+      } else if (status === "MANU") {
+        manutencaoCampos.style.display = "block";
+      }
+    }
+
+    // Atualizar relógio
+    function atualizarRelogio() {
+      const agora = new Date();
+      const relogio = document.getElementById("relogio");
+      relogio.textContent = agora.toLocaleString("pt-BR");
+    }
+
+    // Carregar registros do Google Sheets
+    function carregarRegistros() {
+      fetch(endpoint)
+        .then(response => response.json())
+        .then(data => {
+          renderizarRegistros(data.slice(0, 10)); // Mostrar apenas os 10 mais recentes
+        })
+        .catch(error => {
+          console.error("Erro ao carregar registros:", error);
+        });
+    }
+
+    // Renderizar registros
+    function renderizarRegistros(registros) {
+      const lista = document.getElementById("registro-lista");
+      
+      if (registros.length === 0) {
+        lista.innerHTML = "<p class=\"text-center text-sm\" style=\"color: var(--gray-500);\">Nenhuma modificação registrada ainda.</p>";
+        return;
+      }
+      
+      lista.innerHTML = registros.map(registro => `
+        <div class="equipamento-card" style="margin-bottom: var(--spacing-4);">
+          <div class="equipamento-header">
+            <div class="equipamento-nome">${registro.TAG || "N/A"}</div>
+            <span class="status-badge ${(registro.STATUS || "").toLowerCase()}">${registro.STATUS || "N/A"}</span>
+          </div>
+          <div class="equipamento-detalhes">
+            ${registro.MOTIVO ? `<div class="equipamento-detail"><span class="detail-label">Motivo:</span><span class="detail-value">${registro.MOTIVO}</span></div>` : ""}
+            ${registro.PTS ? `<div class="equipamento-detail"><span class="detail-label">PTS:</span><span class="detail-value">${registro.PTS}</span></div>` : ""}
+            ${registro.OS ? `<div class="equipamento-detail"><span class="detail-label">OS:</span><span class="detail-value">${registro.OS}</span></div>` : ""}
+            ${registro.OBSERVACOES ? `<div class="equipamento-detail"><span class="detail-label">Observações:</span><span class="detail-value">${registro.OBSERVACOES}</span></div>` : ""}
+          </div>
+          <div class="equipamento-footer">
+            Por: ${registro.MODIFICADO_POR || "N/A"} • ${registro.DATA ? new Date(registro.DATA).toLocaleString("pt-BR") : "N/A"}
+          </div>
+        </div>
+      `).join("");
+    }
+
+    // Submissão do formulário
+    document.getElementById("form-status").addEventListener("submit", function(e) {
+      e.preventDefault();
+      salvarEquipamento();
+    });
+
+    async function salvarEquipamento() {
+      const mensagem = document.getElementById("mensagem");
+      const buttonText = document.getElementById("button-text");
+      const buttonLoader = document.getElementById("button-loader");
+      const submitButton = document.querySelector("button[type=\"submit\"]");
+      
+      // Validações
+      const dispositivo = document.getElementById("dispositivo").value;
+      const status = document.getElementById("status").value;
+      
+      if (!dispositivo || !equipamentoSelecionado) {
+        mostrarMensagem("Por favor, selecione um equipamento.", "error");
+        return;
+      }
+      
+      if (!status) {
+        mostrarMensagem("Por favor, selecione um status.", "error");
+        return;
+      }
+      
+      // Mostrar loading
+      buttonText.style.display = "none";
+      buttonLoader.style.display = "inline-block";
+      submitButton.disabled = true;
+      
+      // Determinar o motivo baseado no status
+      let motivo = "";
+      if (status === "ST-BY") {
+        motivo = document.getElementById("motivo-standby").value || "";
+      } else if (status === "MANU") {
+        motivo = document.getElementById("motivo-manutencao").value || "";
+      }
+      
+      // Preparar dados atualizados para toda a linha
+      const dados = {
+        type: "update_row", // Tipo específico para atualização de linha
+        TAG: dispositivo,
+        STATUS: status,
+        MOTIVO: motivo,
+        PTS: document.getElementById("pts").value || "",
+        OS: document.getElementById("os").value || "",
+        RETORNO: document.getElementById("retorno").value || "",
+        CADEADO: document.getElementById("cadeado").value || "",
+        OBSERVACOES: document.getElementById("observacoes").value || "",
+        MODIFICADO_POR: document.getElementById("modificado_por").value || "admin",
+        DATA: new Date().toISOString()
+      };
+      
+      // Enviar para Google Sheets
+      try {
+        const response = await fetch(endpoint, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(dados)
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        if (result.success) {
+          mostrarMensagem("Equipamento atualizado com sucesso!", "success");
+          
+          // Recarregar dados para atualizar a lista
+          await carregarEquipamentosDoSheet();
+          carregarRegistros();
+          
+          // Manter o equipamento selecionado e recarregar seus dados
+          document.getElementById("dispositivo").value = dispositivo;
+          carregarDadosEquipamento();
+        } else {
+          mostrarMensagem(`Erro ao atualizar equipamento: ${result.error || "Erro desconhecido"}`, "error");
+        }
+        
+      } catch (error) {
+        console.error("Erro:", error);
+        mostrarMensagem("Erro ao atualizar equipamento. Tente novamente.", "error");
+      } finally {
+        // Restaurar botão
+        buttonText.style.display = "inline";
+        buttonLoader.style.display = "none";
+        submitButton.disabled = false;
+      }
+    }
+
+    function mostrarMensagem(texto, tipo) {
+      const mensagem = document.getElementById("mensagem");
+      mensagem.textContent = texto;
+      mensagem.className = `message ${tipo}`;
+      mensagem.style.display = "block";
+      
+      setTimeout(() => {
+        mensagem.style.display = "none";
+      }, 5000);
+    }
+  </script>
+</body>
+</html>
+
+
+  </div>
+
+  <footer>
+    Sistema de Monitoramento - 2025
+  </footer>
+
+  <script>
+    function updateDateTime() {
+      const now = new Date();
+      document.getElementById('datetime').innerText = now.toLocaleString('pt-BR', { timeZone: 'America/Recife' });
+    }
+    setInterval(updateDateTime, 1000);
+    updateDateTime();
+  </script>
+</body>
+</html>

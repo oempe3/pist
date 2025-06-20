@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Status</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" href="favicon.png" type="image/png" />
+
+<script>
+  const senhaCorreta = "pernambuco3";
+
+  function verificarAutenticacao() {
+    if (localStorage.getItem("autenticado") !== "sim") {
+      window.location.href = "index.html";
+    }
+  }
+
+  function realizarLogin() {
+    const senha = document.getElementById("senha").value;
+    if (senha === senhaCorreta) {
+      localStorage.setItem("autenticado", "sim");
+      window.location.href = "status.html";
+    } else {
+      alert("Senha incorreta.");
+    }
+  }
+
+  function logout() {
+    localStorage.removeItem("autenticado");
+    window.location.href = "index.html";
+  }
+</script>
+
+<script>
+  const senhaCompleta = "p3rnambuco3";
+  const senhaSomenteStatus = "statusonly";
+
+  function verificarAutenticacao(pagina) {
+    const acesso = localStorage.getItem("acesso");
+    if (pagina === "status") {
+      if (acesso !== "total" && acesso !== "status") {
+        window.location.href = "index.html";
+      }
+    } else {
+      if (acesso !== "total") {
+        window.location.href = "index.html";
+      }
+    }
+  }
+
+  function realizarLogin() {
+    const senha = document.getElementById("senha").value;
+    if (senha === senhaCompleta) {
+      localStorage.setItem("acesso", "total");
+      registrarLogin("Acesso total concedido");
+      window.location.href = "status.html";
+    } else if (senha === senhaSomenteStatus) {
+      localStorage.setItem("acesso", "status");
+      registrarLogin("Acesso limitado à página status");
+      window.location.href = "status.html";
+    } else {
+      alert("Senha incorreta.");
+    }
+  }
+
+  function logout() {
+    localStorage.removeItem("acesso");
+    window.location.href = "index.html";
+  }
+
+  function registrarLogin(tipo) {
+    let historico = JSON.parse(localStorage.getItem("historicoLogin") || "[]");
+    historico.push({ data: new Date().toLocaleString('pt-BR'), tipo });
+    localStorage.setItem("historicoLogin", JSON.stringify(historico));
+  }
+</script>
+</head>
+<body onload='verificarAutenticacao()'>
+  <header>
+    <div><strong>UTE Pernambuco III</strong></div>
+    <div id="datetime"></div>
+  <button onclick="logout()" style="background:#e63946;float:right;margin-left:auto;">Sair</button></header>
+
+  <div class="container">
+    <!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Status - Pernambuco III</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="favicon.png">
+</head>
+<body onload='verificarAutenticacao("status")'>
+  <header class="main-header">
+    <div class="header-content">
+      <div class="header-left">
+        <img src="logomarca.png" alt="Logo Pernambuco III" class="header-logo">
+        <div>
+          <div class="header-title">Quadro de Disponibilidade</div>
+          <div class="header-subtitle">Sistema de Monitoramento de Equipamentos</div>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="header-time" id="relogio"></div>
+        <nav class="header-nav">
+          <a href="status.html" class="nav-button primary">Ver Status</a>
+          <a href="entrada.html" class="nav-button">Atualizar</a>
+          <a href="csv_update.html" class="nav-button">Atualizar CSV</a>
+          <a href="index.html" class="nav-button danger">Sair</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <div class="main-container">
+    <div class="page-title">Status dos Equipamentos</div>
+    <div class="page-description">Monitoramento em tempo real do status de todos os equipamentos</div>
+    
+    <div class="card mb-4">
+      <div class="card-content">
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="text-sm" style="color: var(--gray-600);">Última atualização</div>
+            <div id="ultima-atualizacao" class="font-medium">Carregando...</div>
+          </div>
+          <button onclick="carregarEquipamentos()" class="form-button">
+            <span id="refresh-text">Atualizar</span>
+            <div id="refresh-loader" class="loading-spinner" style="display: none;"></div>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card mb-4" style="border-radius: 12px; background: linear-gradient(135deg, var(--primary-color) 0%, #667eea 100%); color: white;">
+      <div class="card-content">
+        <div class="flex items-center gap-6">
+          <div class="text-center" style="flex: 1;">
+            <div id="total-equipamentos" class="text-3xl font-bold" style="color: white;">0</div>
+            <div class="text-sm opacity-90">Total de Equipamentos</div>
+          </div>
+          <div class="text-center" style="flex: 1;">
+            <div id="total-operacao" class="text-3xl font-bold" style="color: #10b981;">0</div>
+            <div class="text-sm opacity-90">Em Operação</div>
+          </div>
+          <div class="text-center" style="flex: 1;">
+            <div id="total-standby" class="text-3xl font-bold" style="color: #f59e0b;">0</div>
+            <div class="text-sm opacity-90">Stand-by</div>
+          </div>
+          <div class="text-center" style="flex: 1;">
+            <div id="total-manutencao" class="text-3xl font-bold" style="color: #ef4444;">0</div>
+            <div class="text-sm opacity-90">Em Manutenção</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card mb-4" style="border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);">
+      <div class="card-content">
+        <div class="modern-filters">
+          <div class="filter-group">
+            <div class="filter-label">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.35-4.35"></path>
+              </svg>
+              Buscar
+            </div>
+            <input type="text" id="filtro-busca" class="modern-input" placeholder="Digite o nome do equipamento...">
+          </div>
+          
+          <div class="filter-group">
+            <div class="filter-label">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="22,3 2,3 10,12.46 10,19 14,21 14,12.46"></polygon>
+              </svg>
+              Status
+            </div>
+            <select id="filtro-status" class="modern-select">
+              <option value="">Todos os status</option>
+              <option value="OPE">🟢 Em Operação</option>
+              <option value="ST-BY">🟡 Stand-by</option>
+              <option value="MANU">🔴 Em Manutenção</option>
+            </select>
+          </div>
+
+          <div class="filter-actions">
+            <button onclick="limparFiltros()" class="filter-clear-btn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 6h18"></path>
+                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+              </svg>
+              Limpar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div id="loading-container" class="text-center" style="padding: var(--spacing-8);">
+      <div class="loading-spinner" style="margin: 0 auto var(--spacing-4);"></div>
+      <div style="color: var(--gray-600);">Carregando equipamentos...</div>
+    </div>
+    
+    <div class="equipamentos-grid" id="equipamentos-container" style="display: none;"></div>
+    
+    <div id="no-results" class="text-center" style="padding: var(--spacing-8); display: none;">
+      <div style="color: var(--gray-500);">Nenhum equipamento encontrado com os filtros aplicados.</div>
+    </div>
+  </div>
+
+  <script>
+    // Endpoint do Google Apps Script
+    const endpoint = "https://script.google.com/macros/s/AKfycbwSwlJATYl9L0GHOwNrGzRnhRsrNbaZedUd0lLGujwiF4noP8xHP8dUH9SrfVh7fAi0Sw/exec";
+    
+    let equipamentosData = [];
+    let equipamentosFiltrados = [];
+
+    // Inicialização
+    document.addEventListener("DOMContentLoaded", function() {
+      carregarEquipamentos();
+      atualizarRelogio();
+      setInterval(atualizarRelogio, 1000);
+      setInterval(carregarEquipamentos, 30000); // Atualiza a cada 30 segundos
+      
+      // Event listeners para filtros
+      document.getElementById("filtro-busca").addEventListener("input", aplicarFiltros);
+      document.getElementById("filtro-status").addEventListener("change", aplicarFiltros);
+    });
+
+    // Atualizar relógio
+    function atualizarRelogio() {
+      const agora = new Date();
+      const relogio = document.getElementById("relogio");
+      relogio.textContent = agora.toLocaleString("pt-BR");
+    }
+
+    // Carregar equipamentos do Google Sheets
+    function carregarEquipamentos() {
+      const refreshText = document.getElementById("refresh-text");
+      const refreshLoader = document.getElementById("refresh-loader");
+      const refreshButton = document.querySelector("button[onclick=\"carregarEquipamentos()\"]");
+      
+      // Mostrar loading no botão
+      if (refreshText && refreshLoader) {
+        refreshText.style.display = "none";
+        refreshLoader.style.display = "inline-block";
+        refreshButton.disabled = true;
+      }
+      
+      fetch(endpoint)
+        .then(response => response.json())
+        .then(data => {
+          equipamentosData = data;
+          aplicarFiltros();
+          atualizarEstatisticas();
+          atualizarUltimaAtualizacao();
+          
+          // Esconder loading e mostrar conteúdo
+          document.getElementById("loading-container").style.display = "none";
+          document.getElementById("equipamentos-container").style.display = "grid";
+        })
+        .catch(error => {
+          console.error("Erro ao carregar equipamentos:", error);
+          document.getElementById("loading-container").innerHTML = `
+            <div style="color: var(--error-color);">Erro ao carregar dados. Tente novamente.</div>
+            <button onclick="carregarEquipamentos()" class="form-button" style="margin-top: var(--spacing-4);">Tentar Novamente</button>
+          `;
+        })
+        .finally(() => {
+          // Restaurar botão
+          if (refreshText && refreshLoader) {
+            refreshText.style.display = "inline";
+            refreshLoader.style.display = "none";
+            refreshButton.disabled = false;
+          }
+        });
+    }
+
+    // Aplicar filtros
+    function aplicarFiltros() {
+      const busca = document.getElementById("filtro-busca").value.toLowerCase();
+      const statusFiltro = document.getElementById("filtro-status").value;
+      
+      equipamentosFiltrados = equipamentosData.filter(equip => {
+        const matchBusca = !busca || 
+          (equip.TAG && equip.TAG.toLowerCase().includes(busca)) ||
+          (equip.NOME && equip.NOME.toLowerCase().includes(busca));
+        
+        const matchStatus = !statusFiltro || equip.STATUS === statusFiltro;
+        
+        return matchBusca && matchStatus;
+      });
+      
+      renderizarEquipamentos();
+    }
+
+    // Limpar filtros
+    function limparFiltros() {
+      document.getElementById("filtro-busca").value = "";
+      document.getElementById("filtro-status").value = "";
+      aplicarFiltros();
+    }
+
+    // Renderizar equipamentos
+    function renderizarEquipamentos() {
+      const container = document.getElementById("equipamentos-container");
+      const noResults = document.getElementById("no-results");
+      
+      if (equipamentosFiltrados.length === 0) {
+        container.style.display = "none";
+        noResults.style.display = "block";
+        return;
+      }
+      
+      container.style.display = "grid";
+      noResults.style.display = "none";
+      
+      container.innerHTML = equipamentosFiltrados.map(equip => `
+        <div class="equipamento-card fade-in">
+          <div class="equipamento-header">
+            <div class="equipamento-nome">${equip.TAG || "N/A"}</div>
+            <span class="status-badge ${(equip.STATUS || "").toLowerCase().replace("-", "")}">${equip.STATUS || "N/A"}</span>
+          </div>
+          <div class="equipamento-detalhes">
+            ${equip.MOTIVO ? `
+              <div class="equipamento-detail">
+                <span class="detail-label">Motivo:</span>
+                <span class="detail-value">${equip.MOTIVO}</span>
+              </div>
+            ` : ""}
+            ${equip.PTS ? `
+              <div class="equipamento-detail">
+                <span class="detail-label">PTS:</span>
+                <span class="detail-value">${equip.PTS}</span>
+              </div>
+            ` : ""}
+            ${equip.OS ? `
+              <div class="equipamento-detail">
+                <span class="detail-label">OS:</span>
+                <span class="detail-value">${equip.OS}</span>
+              </div>
+            ` : ""}
+            ${equip.RETORNO ? `
+              <div class="equipamento-detail">
+                <span class="detail-label">Retorno:</span>
+                <span class="detail-value">${new Date(equip.RETORNO).toLocaleString("pt-BR")}</span>
+              </div>
+            ` : ""}
+            ${equip.CADEADO ? `
+              <div class="equipamento-detail">
+                <span class="detail-label">Cadeado:</span>
+                <span class="detail-value">${equip.CADEADO}</span>
+              </div>
+            ` : ""}
+            ${equip.OBSERVACOES ? `
+              <div class="equipamento-detail">
+                <span class="detail-label">Observações:</span>
+                <span class="detail-value">${equip.OBSERVACOES}</span>
+              </div>
+            ` : ""}
+          </div>
+          <div class="equipamento-footer">
+            ${equip.MODIFICADO_POR ? `Por: ${equip.MODIFICADO_POR}` : ""} 
+            ${equip.DATA ? `• ${new Date(equip.DATA).toLocaleString("pt-BR")}` : ""}
+          </div>
+        </div>
+      `).join("");
+    }
+
+    // Atualizar estatísticas
+    function atualizarEstatisticas() {
+      const total = equipamentosData.length;
+      const operacao = equipamentosData.filter(e => e.STATUS === "OPE").length;
+      const standby = equipamentosData.filter(e => e.STATUS === "ST-BY").length;
+      const manutencao = equipamentosData.filter(e => e.STATUS === "MANU").length;
+      
+      document.getElementById("total-equipamentos").textContent = total;
+      document.getElementById("total-operacao").textContent = operacao;
+      document.getElementById("total-standby").textContent = standby;
+      document.getElementById("total-manutencao").textContent = manutencao;
+    }
+
+    // Atualizar última atualização
+    function atualizarUltimaAtualizacao() {
+      const agora = new Date();
+      document.getElementById("ultima-atualizacao").textContent = agora.toLocaleString("pt-BR");
+    }
+  </script>
+</body>
+</html>
+
+
+  </div>
+
+  <footer>
+    Sistema de Monitoramento - 2025
+  </footer>
+
+  <script>
+    function updateDateTime() {
+      const now = new Date();
+      document.getElementById('datetime').innerText = now.toLocaleString('pt-BR', { timeZone: 'America/Recife' });
+    }
+    setInterval(updateDateTime, 1000);
+    updateDateTime();
+  </script>
+</body>
+</html>

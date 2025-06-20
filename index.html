@@ -1,0 +1,72 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <div><strong>UTE Pernambuco III</strong></div>
+    <div></div>
+  </header>
+
+  <div class="container">
+    <h2>Login</h2>
+    <input type="password" id="senha" placeholder="Digite a senha de acesso" />
+    <button onclick="realizarLogin()">Entrar</button>
+  </div>
+
+  <footer>
+    Sistema de Monitoramento - 2025
+  </footer>
+
+  
+<script>
+  const senhaCompleta = "p3rnambuco3";
+  const senhaSomenteStatus = "statusonly";
+
+  function verificarAutenticacao(pagina) {
+    const acesso = localStorage.getItem("acesso");
+    if (pagina === "status") {
+      if (acesso !== "total" && acesso !== "status") {
+        window.location.href = "index.html";
+      }
+    } else {
+      if (acesso !== "total") {
+        window.location.href = "index.html";
+      }
+    }
+  }
+
+  function realizarLogin() {
+    const senha = document.getElementById("senha").value;
+    if (senha === senhaCompleta) {
+      localStorage.setItem("acesso", "total");
+      registrarLogin("Acesso total concedido");
+      window.location.href = "status.html";
+    } else if (senha === senhaSomenteStatus) {
+      localStorage.setItem("acesso", "status");
+      registrarLogin("Acesso limitado à página status");
+      window.location.href = "status.html";
+    } else {
+      alert("Senha incorreta.");
+    }
+  }
+
+  function logout() {
+    localStorage.removeItem("acesso");
+    window.location.href = "index.html";
+  }
+
+  function registrarLogin(tipo) {
+    let historico = JSON.parse(localStorage.getItem("historicoLogin") || "[]");
+    historico.push({ data: new Date().toLocaleString('pt-BR'), tipo });
+    localStorage.setItem("historicoLogin", JSON.stringify(historico));
+  }
+</script>
+
+</body>
+</html>

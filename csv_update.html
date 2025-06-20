@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Csv_update</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" href="favicon.png" type="image/png" />
+
+<script>
+  const senhaCorreta = "pernambuco3";
+
+  function verificarAutenticacao() {
+    if (localStorage.getItem("autenticado") !== "sim") {
+      window.location.href = "index.html";
+    }
+  }
+
+  function realizarLogin() {
+    const senha = document.getElementById("senha").value;
+    if (senha === senhaCorreta) {
+      localStorage.setItem("autenticado", "sim");
+      window.location.href = "status.html";
+    } else {
+      alert("Senha incorreta.");
+    }
+  }
+
+  function logout() {
+    localStorage.removeItem("autenticado");
+    window.location.href = "index.html";
+  }
+</script>
+
+<script>
+  const senhaCompleta = "p3rnambuco3";
+  const senhaSomenteStatus = "statusonly";
+
+  function verificarAutenticacao(pagina) {
+    const acesso = localStorage.getItem("acesso");
+    if (pagina === "status") {
+      if (acesso !== "total" && acesso !== "status") {
+        window.location.href = "index.html";
+      }
+    } else {
+      if (acesso !== "total") {
+        window.location.href = "index.html";
+      }
+    }
+  }
+
+  function realizarLogin() {
+    const senha = document.getElementById("senha").value;
+    if (senha === senhaCompleta) {
+      localStorage.setItem("acesso", "total");
+      registrarLogin("Acesso total concedido");
+      window.location.href = "status.html";
+    } else if (senha === senhaSomenteStatus) {
+      localStorage.setItem("acesso", "status");
+      registrarLogin("Acesso limitado à página status");
+      window.location.href = "status.html";
+    } else {
+      alert("Senha incorreta.");
+    }
+  }
+
+  function logout() {
+    localStorage.removeItem("acesso");
+    window.location.href = "index.html";
+  }
+
+  function registrarLogin(tipo) {
+    let historico = JSON.parse(localStorage.getItem("historicoLogin") || "[]");
+    historico.push({ data: new Date().toLocaleString('pt-BR'), tipo });
+    localStorage.setItem("historicoLogin", JSON.stringify(historico));
+  }
+</script>
+</head>
+<body onload='verificarAutenticacao()'>
+  <header>
+    <div><strong>UTE Pernambuco III</strong></div>
+    <div id="datetime"></div>
+  <button onclick="logout()" style="background:#e63946;float:right;margin-left:auto;">Sair</button></header>
+
+  <div class="container">
+    <!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Atualizar CSV - Pernambuco III</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="favicon.png">
+</head>
+<body onload='verificarAutenticacao("entrada")'>
+  <header class="main-header">
+    <div class="header-content">
+      <div class="header-left">
+        <img src="logomarca.png" alt="Logo Pernambuco III" class="header-logo">
+        <div>
+          <div class="header-title">Quadro de Disponibilidade</div>
+          <div class="header-subtitle">Sistema de Monitoramento de Equipamentos</div>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="header-time" id="relogio"></div>
+        <nav class="header-nav">
+          <a href="status.html" class="nav-button">Ver Status</a>
+          <a href="entrada.html" class="nav-button">Atualizar</a>
+          <a href="csv_update.html" class="nav-button primary">Atualizar CSV</a>
+          <a href="index.html" class="nav-button danger">Sair</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <div class="main-container">
+    <div class="page-title">Atualização Completa via CSV</div>
+    <div class="page-description">Faça o upload de um arquivo CSV para substituir completamente todos os dados da planilha no Google Drive.</div>
+    
+    <div class="form-grid">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Upload de Arquivo CSV</div>
+          <div class="card-description">Selecione um arquivo CSV com os dados dos equipamentos. <strong>Atenção:</strong> Todos os dados existentes serão substituídos.</div>
+        </div>
+        <div class="card-content">
+          <form id="csv-upload-form">
+            <div class="form-group">
+              <label class="form-label" for="csvFile">Selecione o arquivo CSV</label>
+              <input type="file" id="csvFile" class="form-input" accept=".csv" required>
+              <div class="form-help">Apenas arquivos .csv são aceitos</div>
+            </div>
+
+            <div class="form-group">
+              <div class="alert alert-warning">
+                <strong>⚠️ Aviso Importante:</strong> Esta operação irá substituir completamente todos os dados existentes na planilha do Google Drive. Certifique-se de que o arquivo CSV contém todos os dados necessários.
+              </div>
+            </div>
+
+            <button type="submit" class="form-button full-width">
+              <span id="button-text">Substituir Planilha Completa</span>
+              <div id="button-loader" class="loading-spinner" style="display: none;"></div>
+            </button>
+            
+            <div id="mensagem" style="display:none;"></div>
+          </form>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Formato Obrigatório do CSV</div>
+          <div class="card-description">O arquivo CSV deve seguir exatamente este formato:</div>
+        </div>
+        <div class="card-content">
+          <pre class="code-block">TAG,STATUS,MOTIVO,PTS,OS,RETORNO,CADEADO,OBSERVACOES,MODIFICADO_POR,DATA</pre>
+          <div class="form-help">
+            <p><strong>Instruções importantes:</strong></p>
+            <ul>
+              <li>A primeira linha deve conter exatamente esses cabeçalhos</li>
+              <li>Não altere a ordem ou os nomes dos cabeçalhos</li>
+              <li>Campos vazios podem ser deixados em branco, mas as vírgulas devem ser mantidas</li>
+              <li>Datas devem estar no formato ISO (YYYY-MM-DDTHH:MM:SS)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Exemplo de Dados</div>
+          <div class="card-description">Exemplo de como os dados devem aparecer no CSV:</div>
+        </div>
+        <div class="card-content">
+          <pre class="code-block">TAG,STATUS,MOTIVO,PTS,OS,RETORNO,CADEADO,OBSERVACOES,MODIFICADO_POR,DATA
+EQP001,OPE,,,,,,,Admin,2025-06-19T15:00:00
+EQP002,ST-BY,Conveniencia operacional,,,,,,Admin,2025-06-19T15:00:00
+EQP003,MANU,Manutencao preventiva,123,OS-001,2025-06-20T10:00,CADEADO-A,Teste,Admin,2025-06-19T15:00:00</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Endpoint do Google Apps Script
+    const endpoint = "https://script.google.com/macros/s/AKfycbwSwlJATYl9L0GHOwNrGzRnhRsrNbaZedUd0lLGujwiF4noP8xHP8dUH9SrfVh7fAi0Sw/exec";
+    
+    // Inicialização
+    document.addEventListener("DOMContentLoaded", function() {
+      atualizarRelogio();
+      setInterval(atualizarRelogio, 1000);
+    });
+
+    // Atualizar relógio
+    function atualizarRelogio() {
+      const agora = new Date();
+      const relogio = document.getElementById("relogio");
+      relogio.textContent = agora.toLocaleString("pt-BR");
+    }
+
+    // Submissão do formulário de upload CSV
+    document.getElementById("csv-upload-form").addEventListener("submit", function(e) {
+      e.preventDefault();
+      handleCsvUpload();
+    });
+
+    async function handleCsvUpload() {
+      const fileInput = document.getElementById("csvFile");
+      const file = fileInput.files[0];
+      const mensagem = document.getElementById("mensagem");
+      const buttonText = document.getElementById("button-text");
+      const buttonLoader = document.getElementById("button-loader");
+      const submitButton = document.querySelector("button[type=\"submit\"]");
+
+      if (!file) {
+        mostrarMensagem("Por favor, selecione um arquivo CSV para upload.", "error");
+        return;
+      }
+
+      // Validar se é um arquivo CSV
+      if (!file.name.toLowerCase().endsWith('.csv')) {
+        mostrarMensagem("Por favor, selecione apenas arquivos .csv", "error");
+        return;
+      }
+
+      // Mostrar loading
+      buttonText.style.display = "none";
+      buttonLoader.style.display = "inline-block";
+      submitButton.disabled = true;
+
+      const reader = new FileReader();
+      reader.onload = async function(e) {
+        try {
+          const csvText = e.target.result;
+          const lines = csvText.split(/\r\n|\n/).filter(line => line.trim() !== ""); // Remove linhas vazias
+          
+          if (lines.length < 2) {
+            throw new Error("O arquivo CSV deve conter pelo menos um cabeçalho e uma linha de dados.");
+          }
+
+          const headers = lines[0].split(",").map(h => h.trim());
+          const expectedHeaders = ["TAG", "STATUS", "MOTIVO", "PTS", "OS", "RETORNO", "CADEADO", "OBSERVACOES", "MODIFICADO_POR", "DATA"];
+          
+          // Validar cabeçalhos
+          if (JSON.stringify(headers) !== JSON.stringify(expectedHeaders)) {
+            throw new Error(`Cabeçalhos incorretos. Esperado: ${expectedHeaders.join(",")}. Encontrado: ${headers.join(",")}`);
+          }
+
+          const data = [];
+          for (let i = 1; i < lines.length; i++) {
+            const values = lines[i].split(",");
+            const row = {};
+            headers.forEach((header, index) => {
+              row[header] = values[index] ? values[index].trim() : "";
+            });
+            data.push(row);
+          }
+
+          // Enviar dados para o Google Apps Script com tipo específico para substituição completa
+          const response = await fetch(endpoint, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ 
+              type: "full_replace", // Tipo específico para substituição completa
+              data: data 
+            })
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          const result = await response.json();
+          if (result.success) {
+            mostrarMensagem(`Planilha substituída com sucesso! ${data.length} registros foram carregados.`, "success");
+            fileInput.value = ""; // Limpa o input do arquivo
+          } else {
+            throw new Error(result.error || "Erro desconhecido ao processar o CSV");
+          }
+        } catch (error) {
+          console.error("Erro ao processar CSV:", error);
+          mostrarMensagem(`Erro ao processar CSV: ${error.message}`, "error");
+        } finally {
+          // Restaurar botão
+          buttonText.style.display = "inline";
+          buttonLoader.style.display = "none";
+          submitButton.disabled = false;
+        }
+      };
+      
+      reader.onerror = function() {
+        mostrarMensagem("Erro ao ler o arquivo CSV.", "error");
+        // Restaurar botão
+        buttonText.style.display = "inline";
+        buttonLoader.style.display = "none";
+        submitButton.disabled = false;
+      };
+      
+      reader.readAsText(file);
+    }
+
+    function mostrarMensagem(texto, tipo) {
+      const mensagem = document.getElementById("mensagem");
+      mensagem.textContent = texto;
+      mensagem.className = `message ${tipo}`;
+      mensagem.style.display = "block";
+      
+      setTimeout(() => {
+        mensagem.style.display = "none";
+      }, 8000); // Mensagem fica visível por mais tempo para dar tempo de ler
+    }
+  </script>
+</body>
+</html>
+
+
+  </div>
+
+  <footer>
+    Sistema de Monitoramento - 2025
+  </footer>
+
+  <script>
+    function updateDateTime() {
+      const now = new Date();
+      document.getElementById('datetime').innerText = now.toLocaleString('pt-BR', { timeZone: 'America/Recife' });
+    }
+    setInterval(updateDateTime, 1000);
+    updateDateTime();
+  </script>
+</body>
+</html>
