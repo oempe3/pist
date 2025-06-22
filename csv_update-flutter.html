@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Atualizar CSV - Pernambuco III</title>
+  <link rel="stylesheet" href="flutter-style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="favicon.png">
+</head>
+<body>
+  <header class="flutter-header">
+    <div class="flutter-header-content">
+      <div class="flutter-header-left">
+        <img src="logomarca.png" alt="Logo Pernambuco III" class="flutter-header-logo">
+        <div>
+          <div class="flutter-header-title">Quadro de Disponibilidade</div>
+          <div class="flutter-header-subtitle">Sistema de Monitoramento de Equipamentos</div>
+        </div>
+      </div>
+      <div class="flutter-header-right">
+        <div class="flutter-header-time" id="relogio"></div>
+        <nav class="flutter-nav">
+          <a href="status.html" class="flutter-button flutter-button-secondary">📊 Ver Status</a>
+          <a href="entrada.html" class="flutter-button flutter-button-secondary">⚙️ Atualizar</a>
+          <a href="csv_update.html" class="flutter-button flutter-button-primary">📁 Atualizar CSV</a>
+          <a href="index.html" class="flutter-button flutter-button-danger">🚪 Sair</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <div class="flutter-container">
+    <div class="flutter-page-title">📁 Atualização Completa via CSV</div>
+    <div class="flutter-page-description">Faça o upload de um arquivo CSV para substituir completamente todos os dados da planilha no Google Drive.</div>
+    
+    <div class="flutter-grid flutter-grid-2">
+      <div class="flutter-card">
+        <div class="flutter-card-header">
+          <div class="flutter-card-title">
+            <span>📤</span>
+            Upload de Arquivo CSV
+          </div>
+          <div class="flutter-card-description">Selecione um arquivo CSV com os dados dos equipamentos. <strong>Atenção:</strong> Todos os dados existentes serão substituídos.</div>
+        </div>
+        <div class="flutter-card-content">
+          <form id="csv-upload-form">
+            <div class="flutter-input-group">
+              <input type="file" id="csvFile" class="flutter-input" accept=".csv" required style="padding-top: var(--space-4);">
+              <label for="csvFile" class="flutter-label">Selecione o arquivo CSV</label>
+              <div class="flutter-text-xs" style="color: var(--text-tertiary); margin-top: var(--space-2);">
+                Apenas arquivos .csv são aceitos
+              </div>
+            </div>
+
+            <div class="flutter-message flutter-message-warning" style="display: flex;">
+              <span style="font-size: var(--font-size-lg);">⚠️</span>
+              <div>
+                <strong>Aviso Importante:</strong> Esta operação irá substituir completamente todos os dados existentes na planilha do Google Drive. Certifique-se de que o arquivo CSV contém todos os dados necessários.
+              </div>
+            </div>
+
+            <button type="submit" class="flutter-button flutter-button-primary flutter-button-full">
+              <span id="button-text">🔄 Substituir Planilha Completa</span>
+              <div id="button-loader" class="flutter-spinner" style="display: none;"></div>
+            </button>
+            
+            <div id="mensagem" class="flutter-message" style="display: none;"></div>
+          </form>
+        </div>
+      </div>
+
+      <div class="flutter-card">
+        <div class="flutter-card-header">
+          <div class="flutter-card-title">
+            <span>📋</span>
+            Formato Obrigatório do CSV
+          </div>
+          <div class="flutter-card-description">O arquivo CSV deve seguir exatamente este formato:</div>
+        </div>
+        <div class="flutter-card-content">
+          <div style="background: var(--surface-3); padding: var(--space-4); border-radius: var(--radius-md); font-family: monospace; font-size: var(--font-size-sm); overflow-x: auto; margin-bottom: var(--space-4);">
+            TAG,STATUS,MOTIVO,PTS,OS,RETORNO,CADEADO,OBSERVACOES,MODIFICADO_POR,DATA
+          </div>
+          
+          <div class="flutter-text-sm" style="color: var(--text-secondary); line-height: 1.6;">
+            <p><strong>📝 Instruções importantes:</strong></p>
+            <ul style="margin: var(--space-3) 0; padding-left: var(--space-5);">
+              <li style="margin-bottom: var(--space-2);">A primeira linha deve conter exatamente esses cabeçalhos</li>
+              <li style="margin-bottom: var(--space-2);">Não altere a ordem ou os nomes dos cabeçalhos</li>
+              <li style="margin-bottom: var(--space-2);">Campos vazios podem ser deixados em branco, mas as vírgulas devem ser mantidas</li>
+              <li style="margin-bottom: var(--space-2);">Datas devem estar no formato ISO (YYYY-MM-DDTHH:MM:SS)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flutter-card">
+      <div class="flutter-card-header">
+        <div class="flutter-card-title">
+          <span>💡</span>
+          Exemplo de Dados
+        </div>
+        <div class="flutter-card-description">Exemplo de como os dados devem aparecer no CSV:</div>
+      </div>
+      <div class="flutter-card-content">
+        <div style="background: var(--surface-3); padding: var(--space-4); border-radius: var(--radius-md); font-family: monospace; font-size: var(--font-size-sm); overflow-x: auto; line-height: 1.6;">
+TAG,STATUS,MOTIVO,PTS,OS,RETORNO,CADEADO,OBSERVACOES,MODIFICADO_POR,DATA<br>
+EQP001,OPE,,,,,,,Admin,2025-06-19T15:00:00<br>
+EQP002,ST-BY,Conveniencia operacional,,,,,,Admin,2025-06-19T15:00:00<br>
+EQP003,MNT,Manutencao preventiva,123,OS-001,2025-06-20T10:00,CADEADO-A,Teste,Admin,2025-06-19T15:00:00
+        </div>
+      </div>
+    </div>
+
+    <!-- Card de Validações -->
+    <div class="flutter-card">
+      <div class="flutter-card-header">
+        <div class="flutter-card-title">
+          <span>✅</span>
+          Validações Aplicadas
+        </div>
+        <div class="flutter-card-description">O sistema aplicará automaticamente as seguintes validações:</div>
+      </div>
+      <div class="flutter-card-content">
+        <div class="flutter-grid" style="grid-template-columns: 1fr 1fr; gap: var(--space-4);">
+          <div>
+            <h4 style="color: var(--primary-600); margin-bottom: var(--space-3);">🟢 Status OPE (Em Operação)</h4>
+            <ul style="font-size: var(--font-size-sm); color: var(--text-secondary); padding-left: var(--space-4);">
+              <li>Motivo: não obrigatório</li>
+              <li>PTS, OS, Retorno, Cadeado: não obrigatórios</li>
+              <li>Observações: sempre disponível</li>
+            </ul>
+          </div>
+          
+          <div>
+            <h4 style="color: var(--warning-600); margin-bottom: var(--space-3);">🟡 Status ST-BY (Stand-by)</h4>
+            <ul style="font-size: var(--font-size-sm); color: var(--text-secondary); padding-left: var(--space-4);">
+              <li>Motivo: obrigatório (Conveniência operacional/sistema)</li>
+              <li>PTS, OS, Retorno, Cadeado: não obrigatórios</li>
+              <li>Observações: sempre disponível</li>
+            </ul>
+          </div>
+          
+          <div style="grid-column: 1 / -1;">
+            <h4 style="color: var(--error-600); margin-bottom: var(--space-3);">🔴 Status MNT (Manutenção)</h4>
+            <ul style="font-size: var(--font-size-sm); color: var(--text-secondary); padding-left: var(--space-4);">
+              <li>Motivo: obrigatório (Preventiva/Corretiva/Preditiva)</li>
+              <li>PTS, OS, Retorno, Cadeado: disponíveis para preenchimento</li>
+              <li>Observações: sempre disponível</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="equipment-system.js"></script>
+
+  <style>
+    .ripple {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.6);
+      transform: scale(0);
+      animation: ripple-animation 0.6s linear;
+      pointer-events: none;
+    }
+
+    @keyframes ripple-animation {
+      to {
+        transform: scale(4);
+        opacity: 0;
+      }
+    }
+
+    /* Estilo para input de arquivo */
+    input[type="file"].flutter-input {
+      cursor: pointer;
+    }
+
+    input[type="file"].flutter-input::-webkit-file-upload-button {
+      background: var(--primary-500);
+      color: white;
+      border: none;
+      padding: var(--space-2) var(--space-4);
+      border-radius: var(--radius-sm);
+      margin-right: var(--space-3);
+      cursor: pointer;
+      transition: background var(--transition-fast);
+    }
+
+    input[type="file"].flutter-input::-webkit-file-upload-button:hover {
+      background: var(--primary-600);
+    }
+  </style>
+</body>
+</html>
+

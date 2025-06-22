@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Status - Pernambuco III</title>
+  <link rel="stylesheet" href="flutter-style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="favicon.png">
+</head>
+<body>
+  <header class="flutter-header">
+    <div class="flutter-header-content">
+      <div class="flutter-header-left">
+        <img src="logomarca.png" alt="Logo Pernambuco III" class="flutter-header-logo">
+        <div>
+          <div class="flutter-header-title">Quadro de Disponibilidade</div>
+          <div class="flutter-header-subtitle">Sistema de Monitoramento de Equipamentos</div>
+        </div>
+      </div>
+      <div class="flutter-header-right">
+        <div class="flutter-header-time" id="relogio"></div>
+        <nav class="flutter-nav">
+          <a href="status.html" class="flutter-button flutter-button-primary">📊 Ver Status</a>
+          <a href="entrada.html" class="flutter-button flutter-button-secondary">⚙️ Atualizar</a>
+          <a href="csv_update.html" class="flutter-button flutter-button-secondary">📁 Atualizar CSV</a>
+          <a href="index.html" class="flutter-button flutter-button-danger">🚪 Sair</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <div class="flutter-container">
+    <div class="flutter-page-title">📊 Status dos Equipamentos</div>
+    <div class="flutter-page-description">Monitoramento em tempo real do status de todos os equipamentos</div>
+    
+    <!-- Card de Última Atualização -->
+    <div class="flutter-card flutter-mb-4">
+      <div class="flutter-card-content">
+        <div class="flutter-flex flutter-items-center flutter-justify-between">
+          <div>
+            <div class="flutter-text-sm" style="color: var(--text-secondary);">Última atualização</div>
+            <div id="ultima-atualizacao" class="flutter-font-medium">Carregando...</div>
+          </div>
+          <button onclick="carregarEquipamentos()" class="flutter-button flutter-button-secondary">
+            <span id="refresh-text">🔄 Atualizar</span>
+            <div id="refresh-loader" class="flutter-spinner" style="display: none;"></div>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card de Estatísticas -->
+    <div class="flutter-stats-card flutter-mb-4">
+      <div class="flutter-stats-grid">
+        <div class="flutter-stat-item">
+          <div id="total-equipamentos" class="flutter-stat-number">0</div>
+          <div class="flutter-stat-label">Total de Equipamentos</div>
+        </div>
+        <div class="flutter-stat-item">
+          <div id="total-operacao" class="flutter-stat-number" style="color: var(--success-500);">0</div>
+          <div class="flutter-stat-label">Em Operação</div>
+        </div>
+        <div class="flutter-stat-item">
+          <div id="total-standby" class="flutter-stat-number" style="color: var(--warning-500);">0</div>
+          <div class="flutter-stat-label">Stand-by</div>
+        </div>
+        <div class="flutter-stat-item">
+          <div id="total-manutencao" class="flutter-stat-number" style="color: var(--error-500);">0</div>
+          <div class="flutter-stat-label">Em Manutenção</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="flutter-filters">
+      <div class="flutter-filters-grid">
+        <div class="flutter-input-group">
+          <input type="text" id="filtro-busca" class="flutter-input" placeholder=" ">
+          <label for="filtro-busca" class="flutter-label">🔍 Buscar equipamento</label>
+        </div>
+        
+        <div class="flutter-input-group">
+          <select id="filtro-status" class="flutter-select">
+            <option value="">Todos os status</option>
+            <option value="OPE">🟢 Em Operação</option>
+            <option value="ST-BY">🟡 Stand-by</option>
+            <option value="MNT">🔴 Em Manutenção</option>
+          </select>
+          <label class="flutter-label">📋 Filtrar por Status</label>
+        </div>
+
+        <button onclick="limparFiltros()" class="flutter-button flutter-button-secondary">
+          🗑️ Limpar
+        </button>
+      </div>
+    </div>
+    
+    <!-- Loading -->
+    <div id="loading-container" class="flutter-text-center" style="padding: var(--space-8);">
+      <div class="flutter-spinner" style="margin: 0 auto var(--space-4);"></div>
+      <div style="color: var(--text-secondary);">Carregando equipamentos...</div>
+    </div>
+    
+    <!-- Grid de Equipamentos -->
+    <div class="flutter-grid flutter-grid-auto" id="equipamentos-container" style="display: none;"></div>
+    
+    <!-- Sem Resultados -->
+    <div id="no-results" class="flutter-text-center" style="padding: var(--space-8); display: none;">
+      <div style="font-size: var(--font-size-4xl); margin-bottom: var(--space-4);">🔍</div>
+      <div style="color: var(--text-secondary);">Nenhum equipamento encontrado com os filtros aplicados.</div>
+      <button onclick="limparFiltros()" class="flutter-button flutter-button-secondary" style="margin-top: var(--space-4);">
+        Limpar Filtros
+      </button>
+    </div>
+  </div>
+
+  <!-- Floating Action Button para atualizar -->
+  <button class="flutter-fab" onclick="carregarEquipamentos()" title="Atualizar dados">
+    <span id="fab-icon">🔄</span>
+  </button>
+
+  <script src="equipment-system.js"></script>
+  <script>
+    // Funções de compatibilidade
+    function carregarEquipamentos() {
+      if (window.equipmentSystem) {
+        window.equipmentSystem.loadEquipments();
+      }
+    }
+    
+    function limparFiltros() {
+      if (window.equipmentSystem) {
+        window.equipmentSystem.clearFilters();
+      }
+    }
+  </script>
+
+  <style>
+    .ripple {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.6);
+      transform: scale(0);
+      animation: ripple-animation 0.6s linear;
+      pointer-events: none;
+    }
+
+    @keyframes ripple-animation {
+      to {
+        transform: scale(4);
+        opacity: 0;
+      }
+    }
+
+    .flutter-fab span {
+      transition: transform 0.5s ease;
+    }
+
+    /* Animação de entrada para os cards */
+    .flutter-equipment-card {
+      animation: flutter-fade-in-up 0.5s ease-out;
+    }
+
+    @keyframes flutter-fade-in-up {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Hover effect para os cards de equipamento */
+    .flutter-equipment-card:hover {
+      transform: translateY(-4px) scale(1.02);
+    }
+  </style>
+</body>
+</html>
+

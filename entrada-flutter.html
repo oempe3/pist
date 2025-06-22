@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Entrada de Dados - Pernambuco III</title>
+  <link rel="stylesheet" href="flutter-style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="favicon.png">
+</head>
+<body>
+  <header class="flutter-header">
+    <div class="flutter-header-content">
+      <div class="flutter-header-left">
+        <img src="logomarca.png" alt="Logo Pernambuco III" class="flutter-header-logo">
+        <div>
+          <div class="flutter-header-title">Quadro de Disponibilidade</div>
+          <div class="flutter-header-subtitle">Sistema de Monitoramento de Equipamentos</div>
+        </div>
+      </div>
+      <div class="flutter-header-right">
+        <div class="flutter-header-time" id="relogio"></div>
+        <nav class="flutter-nav">
+          <a href="status.html" class="flutter-button flutter-button-secondary">📊 Ver Status</a>
+          <a href="csv_update.html" class="flutter-button flutter-button-secondary">📁 Atualizar CSV</a>
+          <a href="index.html" class="flutter-button flutter-button-danger">🚪 Sair</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <div class="flutter-container">
+    <div class="flutter-page-title">⚙️ Atualização de Status dos Equipamentos</div>
+    <div class="flutter-page-description">Atualize o status dos equipamentos em tempo real com sincronização automática</div>
+    
+    <div class="flutter-grid flutter-grid-2">
+      <div class="flutter-card">
+        <div class="flutter-card-header">
+          <div class="flutter-card-title">
+            <span>📝</span>
+            Formulário de Atualização
+          </div>
+          <div class="flutter-card-description">Selecione um equipamento e edite suas informações</div>
+        </div>
+        <div class="flutter-card-content">
+          <form id="form-status">
+            <div class="flutter-input-group">
+              <select id="dispositivo" class="flutter-select" onchange="carregarDadosEquipamento()" required>
+                <option value="">-- Selecione um equipamento --</option>
+              </select>
+              <label class="flutter-label">Equipamento (TAG)</label>
+            </div>
+
+            <div id="dados-equipamento" class="flutter-field-hidden">
+              <div class="flutter-input-group">
+                <select id="status" class="flutter-select" onchange="atualizarCampos()" required>
+                  <option value="">-- Selecione o status --</option>
+                  <option value="OPE">🟢 Em Operação</option>
+                  <option value="ST-BY">🟡 Em Stand-by</option>
+                  <option value="MNT">🔴 Em Manutenção</option>
+                </select>
+                <label class="flutter-label">Status do Equipamento</label>
+              </div>
+
+              <!-- Coluna C - Motivo (visível para ST-BY e MNT) -->
+              <div id="motivo-container" class="flutter-input-group flutter-field-hidden">
+                <select id="motivo" class="flutter-select">
+                  <option value="">-- Selecione o motivo --</option>
+                </select>
+                <label class="flutter-label">Motivo</label>
+              </div>
+
+              <!-- Colunas D, E, F, G - visíveis apenas para MNT -->
+              <div id="pts-container" class="flutter-input-group flutter-field-hidden">
+                <input type="text" id="pts" class="flutter-input" placeholder=" ">
+                <label for="pts" class="flutter-label">Nº da PTS</label>
+              </div>
+              
+              <div id="os-container" class="flutter-input-group flutter-field-hidden">
+                <input type="text" id="os" class="flutter-input" placeholder=" ">
+                <label for="os" class="flutter-label">Nº da OS</label>
+              </div>
+              
+              <div id="retorno-container" class="flutter-input-group flutter-field-hidden">
+                <input type="datetime-local" id="retorno" class="flutter-input">
+                <label for="retorno" class="flutter-label">Previsão de Retorno</label>
+              </div>
+
+              <div id="cadeado-container" class="flutter-input-group flutter-field-hidden">
+                <input type="text" id="cadeado" class="flutter-input" placeholder=" ">
+                <label for="cadeado" class="flutter-label">Nº do Cadeado</label>
+              </div>
+
+              <!-- Coluna H - sempre visível -->
+              <div id="observacoes-container" class="flutter-input-group">
+                <textarea id="observacoes" class="flutter-textarea" maxlength="100" rows="3" placeholder=" "></textarea>
+                <label for="observacoes" class="flutter-label">Observações (Máx. 100 caracteres)</label>
+                <div class="flutter-text-xs flutter-text-right" style="color: var(--text-tertiary); margin-top: var(--space-1);">
+                  <span id="char-count">0</span>/100 caracteres
+                </div>
+              </div>
+
+              <div class="flutter-input-group">
+                <input type="text" id="modificado_por" class="flutter-input" placeholder=" " value="admin">
+                <label for="modificado_por" class="flutter-label">Modificado por</label>
+              </div>
+            </div>
+
+            <button type="submit" class="flutter-button flutter-button-primary flutter-button-full">
+              <span id="button-text">💾 Atualizar Equipamento</span>
+              <div id="button-loader" class="flutter-spinner" style="display: none;"></div>
+            </button>
+            
+            <div id="mensagem" class="flutter-message" style="display: none;"></div>
+          </form>
+        </div>
+      </div>
+
+      <div class="flutter-card">
+        <div class="flutter-card-header">
+          <div class="flutter-card-title">
+            <span>📋</span>
+            Registro de Modificações
+          </div>
+          <div class="flutter-card-description">Histórico das últimas atualizações realizadas</div>
+        </div>
+        <div class="flutter-card-content">
+          <div id="registro-lista">
+            <p class="flutter-text-center flutter-text-sm" style="color: var(--text-tertiary);">Nenhuma modificação registrada ainda.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating Action Button para atualizar -->
+  <button class="flutter-fab" onclick="carregarEquipamentosDoSheet()" title="Atualizar dados">
+    <span id="fab-icon">🔄</span>
+  </button>
+
+  <script src="equipment-system.js"></script>
+  <script>
+    // Funções de compatibilidade para manter funcionamento
+    function carregarEquipamentosDoSheet() {
+      if (window.equipmentSystem) {
+        window.equipmentSystem.loadEquipments();
+      }
+    }
+    
+    function carregarDadosEquipamento() {
+      if (window.equipmentSystem) {
+        window.equipmentSystem.handleEquipmentSelection();
+      }
+    }
+    
+    function atualizarCampos() {
+      if (window.equipmentSystem) {
+        window.equipmentSystem.handleStatusChange();
+      }
+    }
+  </script>
+
+  <style>
+    .ripple {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.6);
+      transform: scale(0);
+      animation: ripple-animation 0.6s linear;
+      pointer-events: none;
+    }
+
+    @keyframes ripple-animation {
+      to {
+        transform: scale(4);
+        opacity: 0;
+      }
+    }
+
+    .flutter-fab span {
+      transition: transform 0.5s ease;
+    }
+  </style>
+</body>
+</html>
+
