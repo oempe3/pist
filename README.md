@@ -1,2 +1,0 @@
-# pist
-GPT 
